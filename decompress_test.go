@@ -11,7 +11,8 @@ import (
 func TestDecompress (t *testing.T) {
 	str.PrintEtr ("Test started...", "std", "TestDecompress ()")
 
-	someStr := []string {"a9dcddd2", "p[11", "s22", "@@2vdd4lm", "a3e3i33o3u3", "q2w2r2t2y2i2o2p2s2d2", "88", "467589ss3"}
+	someStr := []string {"a9dcddd2", "p3000000000", "s22", "@@2vdd4lm", "a3e3i33o3u3",
+		"q2w2r2t2y2i2o2p2s2d2", "88", "467589ss3"}
 
 	for _, aStr := range someStr {
 		o, errX := Decompress (aStr)
@@ -21,7 +22,8 @@ func TestDecompress (t *testing.T) {
 			continue
 		}
 
-		write := fmt.Sprintf ("Decompression success!\nCompressed:%s\nDecompresssed:%s", aStr, o)
+		write := fmt.Sprintf ("Decompression success!\nCompressed:%s\n" +
+			"Decompresssed:%s", aStr, o)
 		str.PrintEtr (write, "std", "TestDecompress ()")
 	}
 

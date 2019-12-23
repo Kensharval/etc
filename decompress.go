@@ -2,36 +2,37 @@ package etc
 
 import (
 	"github.com/qamarian-dtp/err"
+	"math/big"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
 // Function Decompress () decompresses a string.
 //	
-// 	o, e := Decompress ("a4bbcd3")
-//	fmt.Println (o) // Output: aaaabbcddd
+// 	someStr, err := Decompress ("a4bbcd3")
+//	fmt.Println (someStr) // Output: aaaabbcddd
 //
-// If an empty string is supplied, an empty string gets returned.
-// A number can not be the first character of the string, or be zero.
-// Numbers can not exceed: (1 << 31) - 1
+// A number, in the string, can not be:
+//
+// 	zero;
+// 	one;	
+// 	exceed: (1 << 31) - 1;
+// 	the first character of the string.
 func Decompress (i string) (o string, e error) {
 	var (
 		number string
 	)
 
 	// ..1.. {
-	if i == "" {
-		o = i
+	if decompress_InputPattern.MatchString (i) == false {
+		e = err.New ("Invalid input.", nil, nil)
 		return
 	}
 	// ..1.. }
 
 	// ..1.. {
 	e1 := string (i [0])
-	if strings.Contains ("0123456789", e1) {
-		e = err.New ("Invalid input. [The first character can not be a number.]", nil, nil)
-		return
-	}
 	o += e1
 	// ..1.. }
 
@@ -60,9 +61,24 @@ func Decompress (i string) (o string, e error) {
 		}
 
 		if number != "" {
+			num, okT := big.NewInt (0).SetString (number, 0)
+			if okT == false {
+				e = err.New ("Bug detected: possibly due to broken " +
+					"dependency; ref: 0.", nil, nil)
+				return
+			}
+
+			max := big.NewInt ((1 << 31) - 1)
+			if num.Cmp (max) == 1 {
+				e = err.New (`A number exceeds "(1 << 31) - 1"`, nil, nil)
+				return
+			}
+
 			n, errX := strconv.Atoi (number)
 			if errX != nil {
-				e = err.New ("Broken dependency. Ref: 0", nil, nil, errX)
+				e = err.New (`Bug detected: possibly due to broken " +
+					"dependency; ref: 1.`, nil, nil, errX)
+				return
 			}
 
 			lastElem := string (o [len (o) - 1])
@@ -79,9 +95,23 @@ func Decompress (i string) (o string, e error) {
 
 	// ..1.. {
 	if number != "" {
+		num, okT := big.NewInt (0).SetString (number, 0)
+		if okT == false {
+			e = err.New ("Bug detected: possibly due to broken dependency; " +
+				"ref: 0.", nil, nil)
+			return
+		}
+
+		max := big.NewInt ((1 << 31) - 1)
+		if num.Cmp (max) == 1 {
+			e = err.New (`A number exceeds "(1 << 31) - 1"`, nil, nil)
+			return
+		}
+
 		n, errZ := strconv.Atoi (number)
 		if errZ != nil {
-			e = err.New ("Broken dependency. Ref: 0", nil, nil, errZ)
+			e = err.New ("Bug detected: possibly due to broken dependency; " +
+				"ref: 2.", nil, nil, errZ)
 		}
 
 		lastElem := string (o [len (o) - 1])
@@ -92,4 +122,19 @@ func Decompress (i string) (o string, e error) {
 	// ..1.. }
 
 	return
+}
+var (
+	decompress_InputPattern *regexp.Regexp
+)
+func init () {
+	if initReport != nil {
+		return
+	}
+
+	var errX error
+	decompress_InputPattern, errX = regexp.Compile (`^(\D([2-9]|[1-9]\d+)?)+$`)
+	if errX != nil {
+		initReport = err.New ("Buggy package: unable to compile regular " +
+			"expression; ref: Decompress ()-1.", nil, nil, errX)
+	}
 }
